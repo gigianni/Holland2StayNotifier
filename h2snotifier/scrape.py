@@ -1,6 +1,5 @@
 import logging
-
-import requests
+import cloudscraper
 
 from dotenv import dotenv_values
 from telegram import TelegramBot
@@ -10,7 +9,6 @@ TELEGRAM_API_KEY = env.get("TELEGRAM_API_KEY")
 DEBUGGING_CHAT_ID = env.get("DEBUGGING_CHAT_ID")
 
 debug_telegram = TelegramBot(apikey=TELEGRAM_API_KEY, chat_id=DEBUGGING_CHAT_ID)
-
 
 def generate_payload(cities, page_size):
     payload = {
@@ -165,6 +163,7 @@ def generate_payload(cities, page_size):
 
 CITY_IDS = {
     "24": "Amsterdam",
+    "6249": "Amersfoort",
     "320": "Arnhem",
     "619": "Capelle aan den IJssel",
     "26": "Delft",
@@ -268,11 +267,16 @@ Contract type: {house['contract_type']}
 
 # See details and apply on Holland2Stay website."""
 
-
 # Define the GraphQL query payload
 def scrape(cities=[], page_size=30):
     payload = generate_payload(cities, page_size)
-    response = requests.post("https://api.holland2stay.com/graphql/", json=payload)
+
+    scraper = cloudscraper.create_scraper(delay=10,   browser={'custom': 'ScraperBot/1.0',})
+    url = 'https://api.holland2stay.com/graphql/'
+    response = scraper.post(url, json=payload)
+
+    print(f"status_code: {response.status_code}")
+
     data = response.json()["data"]
     cities_dict = {}
     for c in cities:
